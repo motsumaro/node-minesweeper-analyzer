@@ -60,7 +60,7 @@ class Analyzer {
     private _valid = true;
     private _probabilityMap: ProbabilityMap | null = null;
     private _removedHints = [] as Hint[];
-    private _coveredArea = [];
+    private _coveredArea = [] as number[];
 
     isValid() { return this._valid; }
 
@@ -91,11 +91,21 @@ class Analyzer {
     }
     private _addHint(hint: Hint): boolean {
         if (!this._valid) return false;
+        if (hint.breadth === 0) return true;
+        for (let existedHint of this._hints) {
+            if (Hint.areaInclude(hint.area, existedHint.area)) {
+                const partMin = existedHint.partMin(hint.breadth);
+                const partMax = existedHint.partMax(hint.breadth);
+                if (hint.min <= partMin && partMax <= hint.max) return true;
+                const newMin = Math.max(hint.min, partMin);
+                const newMax = Math.min(hint.max, partMax);
+                hint = new Hint(hint.area, newMin, newMax);
+            }
+        }
         if (!hint.isValid()) {
             this._hints.push(hint);
             return this._valid = false;
         }
-        if (hint.breadth === 0) return true;
         for (let removedHint of this._removedHints) if (hint.equals(removedHint)) return true;
 
         // 空地確定、地雷確定の領域の情報は1マスごとに分割
@@ -116,7 +126,6 @@ class Analyzer {
         // 既存のhintと合成する
         const addHintsList = [] as Hint[]; // 追加予約リスト
         let notPushNewHint = false;
-        for (let existedHint of this._hints) if (hint.equals(existedHint)) return true;
         for (let i = 0; i < this._hints.length; i++) {
             const existedHint = this._hints[i];
             const resolveResult = Hint.solve(hint, existedHint);
@@ -146,7 +155,7 @@ class Analyzer {
         loop_hint:
         for (let hint of this._hints) {
             if (restArea) restArea = Hint.areaDifference(restArea, hint.area);
-            
+
             // 確定マス
             if (hint.breadth === 1 && hint.min === hint.max) {
                 dividedHints[hint.min /* 0 or 1 */].push(hint);
@@ -262,19 +271,43 @@ class Analyzer {
                     patterns.push(new Hint(keyArea, i));
                 }
             } else {
-                // いずれのhintも占有領域を持たない場合、最も多くのhintに含まれる1マスの地雷の有無で場合分け
-                let keyPosition = 0, maxHintsNumber = -Infinity;
-                for (let position in positionHintsNumbersMap) {
-                    const hintsNumber = positionHintsNumbersMap[position];
-                    if (hintsNumber > maxHintsNumber) {
-                        keyPosition = Number(position);
-                        maxHintsNumber = hintsNumber;
+
+                // ある領域内の地雷数で場合分け
+                let keyHint: Hint | null = null;
+                for (let hint of hints) {
+                    if (hint.min !== hint.max) {
+                        if (!keyHint || hint.max - hint.min > keyHint.max - keyHint.min ||
+                            (hint.max - hint.min === keyHint.max - keyHint.min && hint.breadth < keyHint.breadth)) {
+                            keyHint = hint;
+                        }
                     }
                 }
-                patterns.push(
-                    new Hint([keyPosition], 0),
-                    new Hint([keyPosition], 1),
-                );
+                if (keyHint) {
+                    for (let i = keyHint.min; i <= keyHint.max; i++) {
+                        patterns.push(new Hint(keyHint.area, i));
+                    }
+                } else {
+
+                    // 最も多くのhintに含まれる1マスの地雷の有無で場合分け
+                    // let keyPosition = 0, maxHintsNumber = -Infinity;
+                    // for (let position in positionHintsNumbersMap) {
+                    //     const hintsNumber = positionHintsNumbersMap[position];
+                    //     if (hintsNumber > maxHintsNumber) {
+                    //         keyPosition = Number(position);
+                    //         maxHintsNumber = hintsNumber;
+                    //     }
+                    // }
+
+                    // 最小サイズのhintから崩す
+                    let keyHint = hints[0];
+                    for (let hint of hints) if (hint.breadth < keyHint.breadth) keyHint = hint;
+                    const keyPosition = keyHint.area[0];
+
+                    patterns.push(
+                        new Hint([keyPosition], 0),
+                        new Hint([keyPosition], 1),
+                    );
+                }
             }
 
             // 全ての場合についてProbabilityMapを算出し統合
