@@ -1,6 +1,6 @@
 {
   "name": "minesweeper-analyzer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Analyze the board of Minesweeper",
   "main": "lib/analyzer.js",
   "scripts": {
