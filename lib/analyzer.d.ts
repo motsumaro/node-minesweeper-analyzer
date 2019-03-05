@@ -4,6 +4,7 @@ declare class Analyzer {
     private _probabilityMap;
     private _removedHints;
     private _coveredArea;
+    private _wholeAreaHint;
     isValid(): boolean;
     clone(): Analyzer;
     add(area: number[], min: number, max?: number): boolean;
@@ -11,9 +12,8 @@ declare class Analyzer {
     private _addHint;
     private _classifyHints;
     private _calculateProbabilityMap;
-    getProbabilityMap(minesNumber: number): {
-        [x: number]: number;
-    } | null;
+    getProbabilityMap(minesNumber: number): Record<number, number> | null;
     getPatternsNumber(minesNumber: number): number;
+    _getRestAreaOnWholeArea(): number[] | null;
 }
 export = Analyzer;

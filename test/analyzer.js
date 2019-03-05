@@ -35,7 +35,7 @@ describe("Analyzer", function () {
             const analyzer = new Analyzer();
             analyzer.add([0], 1);
             analyzer.add([0, 1], 1, 2);
-            analyzer._hints.length.should.eql(2);
+            analyzer._coveredArea.should.eql([0, 1]);
         });
 
         it("returns false when a conflict is detected", function () {
@@ -57,18 +57,6 @@ describe("Analyzer", function () {
             a.add([19, 20, 21, 27, 29, 35, 36, 37], 1);
             a.add([36], 0);
             a.add([27, 28, 29, 35, 37, 43, 44, 45], 1);
-
-            const b = new Analyzer();
-            b.addR(0, 63, 30);
-            b.add([27], 0);
-            b.add([18, 19, 20, 26, 28, 34, 35, 36], 2);
-            b.add([35], 0);
-            b.add([26, 27, 28, 34, 36, 42, 43, 44], 0);
-            b.add([28], 0);
-            b.add([19, 20, 21, 27, 29, 35, 36, 37], 2);
-            b.add([36], 0);
-            b.add([27, 28, 29, 35, 37, 43, 44, 45], 1);
-            b.getProbabilityMap(30);
         });
 
     });
@@ -116,6 +104,31 @@ describe("Analyzer", function () {
                 { ...[0.2, 0.2, 0.2, 1, 0.2, 0, 0, 0.2, 0.2, 0, 0, 0.2, 1, 0.2, 0.2, 0.2] },
                 null,
             ]));
+        });
+
+        it("avoids long routes", function () {
+            const b = new Analyzer();
+            b.addR(0, 63, 30);
+            b.add([27], 0);
+            b.add([18, 19, 20, 26, 28, 34, 35, 36], 2);
+            b.add([35], 0);
+            b.add([26, 27, 28, 34, 36, 42, 43, 44], 0);
+            b.add([28], 0);
+            b.add([19, 20, 21, 27, 29, 35, 36, 37], 2);
+            b.add([36], 0);
+            b.add([27, 28, 29, 35, 37, 43, 44, 45], 1);
+            b.getProbabilityMap(30);
+            
+            const a = new Analyzer();
+            a.add([0, 1, 2, 10, 11, 12, 20, 21, 22], 2);
+            a.add([1, 2, 3, 11, 12, 13, 21, 22, 23], 1);
+            a.add([10, 11, 12, 20, 21, 22, 30, 31, 32], 2);
+            a.add([11, 12, 13, 21, 22, 23, 31, 32, 33], 1);
+            a.addR(0, 99, 10);
+            a.add([12, 13, 14, 22, 23, 24, 32, 33, 34], 1);
+            a.add([22, 23, 24, 32, 33, 34, 42, 43, 44], 2);
+            a.add([11, 12, 21, 22, 23, 33], 0);
+            a.getProbabilityMap(10);
         });
 
     });
