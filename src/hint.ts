@@ -27,9 +27,7 @@ class Hint {
     }
 
     equals(another: Hint) {
-        if (this.min !== another.min || this.max !== another.max || this.breadth !== another.breadth) return false;
-        for (let i = 0; i < this.breadth; i++) if (this.area[i] !== another.area[i]) return false;
-        return true;
+        return this.min === another.min && this.max === another.max && Hint.areaEqual(this.area, another.area);
     }
 
     clone() {
@@ -46,6 +44,31 @@ class Hint {
     partMax(partBreadth: number) { return Math.min(this.max, partBreadth); }
 
     // area系メソッドは全てデータが昇順であることが前提
+
+    // areaが等しいか
+    static areaEqual(area1: number[], area2: number[]) {
+        const l = area1.length;
+        if (area2.length !== l) return false;
+        for (let i = 0; i < l; i++) if (area1[i] !== area2[i]) return false;
+        return true;
+    }
+
+    // area1がarea2の部分集合か
+    static areaInclude(area1: number[], area2: number[]) {
+        let i = 0, j = 0, breadth1 = area1.length, breadth2 = area2.length;
+        while (i < breadth1) {
+            const a = area1[i], b = area2[j];
+            if (j >= breadth2 || a < b) {
+                return false;
+            } else if (a === b) {
+                i++;
+                j++;
+            } else {
+                j++;
+            }
+        }
+        return true;
+    }
 
     // areaが交差するか
     static areaCrossing(area1: number[], area2: number[]) {

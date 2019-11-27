@@ -9,6 +9,8 @@ declare class Hint {
     isValid(): boolean;
     partMin(partBreadth: number): number;
     partMax(partBreadth: number): number;
+    static areaEqual(area1: number[], area2: number[]): boolean;
+    static areaInclude(area1: number[], area2: number[]): boolean;
     static areaCrossing(area1: number[], area2: number[]): boolean;
     static areaCombine(area1: number[], area2: number[]): number[];
     static areaIntersection(area1: number[], area2: number[]): number[] | null;

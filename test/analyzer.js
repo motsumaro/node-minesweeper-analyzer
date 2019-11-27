@@ -46,49 +46,6 @@ describe("Analyzer", function () {
             analyzer.add([1], 1).should.be.false();
         });
 
-        it("works without error", function () {
-            for (let i = 0; i < 256; i++) {
-                const width = Math.floor(Math.random() * 15) + 1;
-                const height = Math.floor(Math.random() * 15) + 1;
-                const mineProbability = Math.random() * 1.2 - 0.1;
-                const field = [];
-                let allMines = 0;
-                for (let x = 0; x < width; x++) {
-                    field[x] = [];
-                    for (let y = 0; y < height; y++) {
-                        field[x][y] = Math.random() < mineProbability ? 1 : 0;
-                        allMines += field[x][y];
-                    }
-                }
-                const p = (x, y) => x < 0 || width <= x || y < 0 || height <= y ? -1 : (x + y * width);
-                const f = (x, y) => x < 0 || width <= x || y < 0 || height <= y ? 0 : field[x][y];
-
-                const stoneProbability = Math.random() * 2;
-                const analyzer = new Analyzer();
-                analyzer.addR(0, width * height - 1, allMines);
-                for (let x = 0; x < width; x++) {
-                    for (let y = 0; y < height; y++) {
-                        if (Math.floor() < stoneProbability && field[x][y] === 0) {
-
-                            const neighborhood = [
-                                p(x - 1, y - 1), p(x, y - 1), p(x + 1, y - 1), p(x - 1, y),
-                                p(x + 1, y), p(x - 1, y + 1), p(x, y + 1), p(x + 1, y + 1)
-                            ].filter(x => x >= 0);
-                            const neighborhoodMines =
-                                f(x - 1, y - 1) + f(x, y - 1) + f(x + 1, y - 1) + f(x - 1, y) +
-                                f(x + 1, y) + f(x - 1, y + 1) + f(x, y + 1) + f(x + 1, y + 1);
-
-                            analyzer.add([p(x, y)], 0);
-                            analyzer.add(neighborhood, neighborhoodMines);
-
-                        }
-                    }
-                }
-                
-                analyzer.getPatternsNumber(allMines).should.be.greaterThan(0);
-            }
-        });
-
         it("does not fall into an infinite loop", function () {
             const a = new Analyzer();
             a.addR(0, 63, 10);
@@ -100,6 +57,18 @@ describe("Analyzer", function () {
             a.add([19, 20, 21, 27, 29, 35, 36, 37], 1);
             a.add([36], 0);
             a.add([27, 28, 29, 35, 37, 43, 44, 45], 1);
+
+            const b = new Analyzer();
+            b.addR(0, 63, 30);
+            b.add([27], 0);
+            b.add([18, 19, 20, 26, 28, 34, 35, 36], 2);
+            b.add([35], 0);
+            b.add([26, 27, 28, 34, 36, 42, 43, 44], 0);
+            b.add([28], 0);
+            b.add([19, 20, 21, 27, 29, 35, 36, 37], 2);
+            b.add([36], 0);
+            b.add([27, 28, 29, 35, 37, 43, 44, 45], 1);
+            b.getProbabilityMap(30);
         });
 
     });
