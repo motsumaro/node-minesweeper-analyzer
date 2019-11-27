@@ -59,6 +59,8 @@ class Analyzer {
     private _hints = [] as Hint[];
     private _valid = true;
     private _probabilityMap: ProbabilityMap | null = null;
+    private _removedHints = [] as Hint[];
+    private _coveredArea = [];
 
     isValid() { return this._valid; }
 
@@ -67,6 +69,8 @@ class Analyzer {
         analyzer._hints = this._hints.map(hint => hint.clone());
         analyzer._valid = this._valid;
         analyzer._probabilityMap = this._probabilityMap;
+        analyzer._removedHints = this._removedHints.map(hint => hint.clone());
+        analyzer._coveredArea = [...this._coveredArea];
         return analyzer;
     }
 
@@ -92,6 +96,7 @@ class Analyzer {
             return this._valid = false;
         }
         if (hint.breadth === 0) return true;
+        for (let removedHint of this._removedHints) if (hint.equals(removedHint)) return true;
 
         // 空地確定、地雷確定の領域の情報は1マスごとに分割
         if (hint.breadth > 1 && hint.min === 0 && hint.max === 0) {
@@ -117,14 +122,15 @@ class Analyzer {
             const resolveResult = Hint.solve(hint, existedHint);
             if (!resolveResult) continue;
             addHintsList.push(...resolveResult.newHints);
-            if (resolveResult.hint2removable) this._hints.splice(i--, 1);
+            if (resolveResult.hint2removable) this._removedHints.push(this._hints.splice(i--, 1)[0]);
             if (resolveResult.hint1removable) {
                 // newHintが不要と判断されたらこのループは中止
                 notPushNewHint = true;
                 break;
             }
         }
-        if (!notPushNewHint) this._hints.push(hint);
+        Hint.areaCombine(this._coveredArea, hint.area);
+        if (notPushNewHint) this._removedHints.push(hint); else this._hints.push(hint);
         for (let addHint of addHintsList) if (!this._addHint(addHint)) return false;
         return true;
     }
@@ -134,10 +140,13 @@ class Analyzer {
         const dividedHints = [[], []] as Hint[][]; // 0と1は確定hint
         const dividedAreas = [0 as any, 0 as any] as number[][];
         let dividedLength = 2;
+        let restArea: number[] | null = [...this._coveredArea];
 
         // 仮分割
         loop_hint:
         for (let hint of this._hints) {
+            if (restArea) restArea = Hint.areaDifference(restArea, hint.area);
+            
             // 確定マス
             if (hint.breadth === 1 && hint.min === hint.max) {
                 dividedHints[hint.min /* 0 or 1 */].push(hint);
@@ -172,6 +181,8 @@ class Analyzer {
                 }
             }
         }
+
+        if (restArea) dividedHints.push([new Hint(restArea, 0, restArea.length)]);
 
         return dividedHints;
     }
