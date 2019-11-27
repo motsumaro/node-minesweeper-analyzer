@@ -161,9 +161,9 @@ class Hint {
         // 交差部分
         const iHint = new Hint(intersection, Math.max(iMin1, iMin2), Math.min(iMax1, iMax2));
         if (iHint.equals(hint1)) {
-            if (iHint.min === iHint.max) hint2removable = true;
+            if (iHint.min === iHint.max || hint2.breadth === iBreadth) hint2removable = true;
         } else if (iHint.equals(hint2)) {
-            if (iHint.min === iHint.max) hint1removable = true;
+            if (iHint.min === iHint.max || hint1.breadth === iBreadth) hint1removable = true;
         } else {
             newHints.push(iHint);
             if (iHint.min === iHint.max) hint1removable = hint2removable = true;
